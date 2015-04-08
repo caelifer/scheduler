@@ -10,22 +10,44 @@ go get github.com/caelifer/schduler
 
 # Usage
 ```
-import "github.com/caelifer/scheduler"
+package main
 
-const (
-  NWORKERS = 50
-  NJOBS = 100
+import (
+	"fmt"
+	"math/rand"
+	"sync"
+	"time"
+
+	"github.com/caelifer/scheduler"
 )
 
-...
-sched := scheduler.New(NWORKERS, NJOBS)
-out := make(chan Result)
+const (
+	NWORKERS = 10
+	NJOBS    = 5
+	NSAMPS   = 100
+)
 
-...
-sched.Schedule(func(){
-  out <- longRunningTask()
-})
+func main() {
+	wg := new(sync.WaitGroup)
+	sch := scheduler.New(NWORKERS, NJOBS)
 
-...
-res := <-out
+	t0 := time.Now()
+	rand.Seed(t0.UnixNano())
+
+	for i := 0; i < NSAMPS; i++ {
+		wg.Add(1)
+		sch.Schedule(func() {
+			defer wg.Done()
+			time.Sleep(time.Duration(rand.Intn(100)) * time.Millisecond)
+		})
+	}
+
+	wg.Wait()
+	fmt.Printf("Ran #%d samples in %s\n", NSAMPS, time.Since(t0))
+}
+```
+This code should produce output similar to
+```
+$ go run test.go
+Ran #100 samples in 546.21049ms
 ```
