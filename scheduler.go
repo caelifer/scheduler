@@ -12,11 +12,12 @@ type Scheduler interface {
 	Schedule(job.Interface)
 }
 
-// New() builds a new Scheduler object. It starts its scheduler on the background and make sure
-// all awailable workers are always running on the background waiting for the work unit to come in. The
-// work units are managed in a separate buffered channel of job.Interfaces. New() takes two paramters.
-// nworkers - a number of background workers, and njobs - a number of queued jobs, before scheduler would
-// block.
+// New builds a new Scheduler object. It starts its internal scheduling process
+// on the background. This scheduling process makes sure that all available workers
+// are always running on the background waiting for the work unit to come in. The
+// work units are managed in a separate buffered channel of job.Interfaces. New
+// takes two paramters.  nworkers - a number of background workers, and njobs -
+// a number of queued jobs, before scheduler would block.
 func New(nworkers, njobs int) Scheduler {
 	s := new(simpleScheduler) // Heap
 	s.workPool = make(chan worker.Interface, nworkers)
