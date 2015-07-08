@@ -43,11 +43,11 @@ func main() {
 	}
 
 	wg.Wait()
-	fmt.Printf("Ran #%d samples in %s\n", NSAMPS, time.Since(t0))
+	fmt.Printf("Ran %d samples in %s\n", NSAMPS, time.Since(t0))
 }
 ```
 This code should produce output similar to
 ```
 $ go run test.go
-Ran #100 samples in 546.21049ms
+Ran 100 samples in 546.21049ms
 ```
