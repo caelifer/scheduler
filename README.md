@@ -5,7 +5,7 @@ scheduler
 
 # Installation
 ```
-go get github.com/caelifer/schduler
+go get github.com/caelifer/scheduler
 ```
 
 # Usage
