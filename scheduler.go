@@ -46,16 +46,16 @@ func New(nworkers, njobs int) Scheduler {
 	return s
 }
 
-// Private concreat implementation
+// Private concrete implementation
 
-// simpleScheduler is an value type that implementes Scheduler interface.
+// simpleScheduler is an value type that implements Scheduler interface.
 type simpleScheduler struct {
 	workPool chan worker.Interface // Buffered channel of workers
 	done     chan worker.Interface // Unbuffered channel for workers to signal they are done
 	jobs     chan job.Interface    // Buffered channel of pending work units
 }
 
-// Schedule is an implementation of Schedlue interface for simpleSchedule value type.
+// Schedule is an implementation of Schedule interface for simpleSchedule value type.
 func (s *simpleScheduler) Schedule(j job.Interface) {
 	s.jobs <- j // Could block if jobs buffer is full
 }
