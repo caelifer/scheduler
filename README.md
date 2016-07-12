@@ -28,7 +28,7 @@ const (
 )
 
 func main() {
-	wg sync.WaitGroup
+	var wg sync.WaitGroup
 	sch := scheduler.New(NWORKERS, NJOBS)
 
 	t0 := time.Now()
