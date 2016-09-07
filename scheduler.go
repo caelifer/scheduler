@@ -32,11 +32,9 @@ func New(nworkers, njobs int) Scheduler {
 	go func() {
 		// Run until the main program finishes
 		for {
-			// Get new worker from the worker pool
-			w := <-s.workPool
-
-			// Run next job with this worker
-			w.Run(<-s.jobs) // should not block
+			// Run next job with next available worker. This will block when either
+			// there are no available workers or jobs queue is empty
+			(<-s.workPool).Run(<-s.jobs)
 		}
 	}()
 
