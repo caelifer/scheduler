@@ -21,25 +21,22 @@ type Scheduler interface {
 func New(nworkers, njobs int) Scheduler {
 	s := new(simpleScheduler) // Heap
 	s.workPool = make(chan worker.Interface, nworkers)
-	s.done = make(chan worker.Interface)
 	s.jobs = make(chan job.Interface, njobs)
 
 	// Populate our pool of workers
 	for i := 0; i < nworkers; i++ {
-		s.workPool <- worker.New(s.done)
+		s.workPool <- worker.New(s.workPool)
 	}
 
 	// Start our scheduler on the background
 	go func() {
 		// Run until the main program finishes
 		for {
-			select {
-			case w := <-s.workPool:
-				// Schedule new worker on the background "thread"
-				go func() { w.Run(<-s.jobs) }()
-			case w := <-s.done:
-				s.workPool <- w // Never blocks
-			}
+			// Get new worker from the worker pool
+			w := <-s.workPool
+
+			// Run next job with this worker
+			w.Run(<-s.jobs) // should not block
 		}
 	}()
 
@@ -51,7 +48,6 @@ func New(nworkers, njobs int) Scheduler {
 // simpleScheduler is an value type that implements Scheduler interface.
 type simpleScheduler struct {
 	workPool chan worker.Interface // Buffered channel of workers
-	done     chan worker.Interface // Unbuffered channel for workers to signal they are done
 	jobs     chan job.Interface    // Buffered channel of pending work units
 }
 
