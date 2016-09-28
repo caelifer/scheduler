@@ -64,6 +64,5 @@ func (s *simpleScheduler) Schedule(j job.Interface) {
 func (s *simpleScheduler) Shutdown() {
 	close(s.quit)
 	close(s.jpool)
-	close(s.wpool)
 	s = nil // release memory
 }
