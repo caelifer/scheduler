@@ -30,10 +30,8 @@ const (
 func main() {
 	var wg sync.WaitGroup
 	sch := scheduler.New(NWORKERS, NJOBS)
-
 	t0 := time.Now()
 	rand.Seed(t0.UnixNano())
-
 	for i := 0; i < NSAMPS; i++ {
 		wg.Add(1)
 		sch.Schedule(func() {
@@ -41,7 +39,6 @@ func main() {
 			time.Sleep(time.Duration(rand.Intn(100)) * time.Millisecond)
 		})
 	}
-
 	wg.Wait()
 	fmt.Printf("Ran %d samples in %s\n", NSAMPS, time.Since(t0))
 }
