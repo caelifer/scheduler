@@ -5,8 +5,6 @@ import (
 	"github.com/caelifer/scheduler/worker"
 )
 
-// Public interfaces
-
 // Scheduler is an interface type to provide an abstraction around load-balancing operation scheduling.
 type Scheduler interface {
 	Schedule(job.Interface)
@@ -27,7 +25,6 @@ func New(nworkers, njobs int) Scheduler {
 	for i := 0; i < nworkers; i++ {
 		s.workPool <- worker.New(s.workPool)
 	}
-
 	// Start our scheduler on the background
 	go func() {
 		// Run until the main program finishes
@@ -37,11 +34,8 @@ func New(nworkers, njobs int) Scheduler {
 			(<-s.workPool).Run(<-s.jobs)
 		}
 	}()
-
 	return s
 }
-
-// Private concrete implementation
 
 // simpleScheduler is an value type that implements Scheduler interface.
 type simpleScheduler struct {
