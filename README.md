@@ -1,7 +1,7 @@
 scheduler
 =========
 
-`scheduler` is a simple load-balancer across n-workers. It maintains a buffered channel of work-uinits represented via [jobs.Interface](https://github.com/caelifer/scheduler/blob/master/job/job.go#L6)
+`scheduler` is a simple load-balancer across n-workers. It maintains a buffered channel of work-uinits represented by func() values
 
 # Installation
 ```
