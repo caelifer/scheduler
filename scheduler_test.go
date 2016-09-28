@@ -73,6 +73,10 @@ func BenchmarkScheduler50over100(b *testing.B) {
 	benchmarkScheduler(b, New(50, 100))
 }
 
+func BenchmarkScheduler100over10(b *testing.B) {
+	benchmarkScheduler(b, New(100, 10))
+}
+
 func BenchmarkScheduler100over100(b *testing.B) {
 	benchmarkScheduler(b, New(100, 100))
 }
