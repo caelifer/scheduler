@@ -19,15 +19,31 @@ type simpleWorker struct {
 
 // New constructs new Worker. It takes one parameter - a done channel to
 // signal to Scheduler that this worker is done with its work.
-func New(done chan<- Interface) Interface {
+func New(done chan<- Interface, quit <-chan struct{}) Interface {
 	w := new(simpleWorker) // Heap
 	w.done = done
 	w.jobs = make(chan job.Interface, 1)
+
 	// Start worker's thread
 	go func() {
 		for {
-			// Execute next available job
-			(<-w.jobs)()
+			select {
+			case j := <-w.jobs:
+				j() // Execute new job
+			case <-quit:
+				// Prevent anyone submitting new jobs to finished worker
+				close(w.jobs)
+
+				// Process a job that can be left on the buffered queue
+				select {
+				case j, ok := <-w.jobs:
+					if ok {
+						j()
+					}
+				default: // noop
+				}
+				return // shutdown
+			}
 		}
 	}()
 	return w

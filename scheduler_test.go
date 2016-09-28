@@ -11,12 +11,12 @@ func TestScheduler(t *testing.T) {
 		workers, jobs int
 		results       []int
 	}{
-		{1, 1, make([]int, 10000)},
-		{10, 1, make([]int, 10000)},
-		{10, 10, make([]int, 10000)},
-		{100, 10, make([]int, 10000)},
-		{100, 100, make([]int, 10000)},
-		{100, 500, make([]int, 10000)},
+		{1, 1, make([]int, 100000)},
+		{10, 1, make([]int, 100000)},
+		{10, 10, make([]int, 100000)},
+		{100, 10, make([]int, 100000)},
+		{100, 100, make([]int, 100000)},
+		{100, 500, make([]int, 100000)},
 	}
 
 	for _, tc := range tests {
@@ -30,19 +30,21 @@ func TestScheduler(t *testing.T) {
 				defer wg.Done()
 				// Make sure number of running workers is less or eaqual to
 				sch := sch.(*simpleScheduler)
-				if n := len(sch.workPool) + 1; n > max {
+				if n := len(sch.wpool) + 1; n > max {
 					t.Fatalf("Number of runing workers is greater then max specified: %d > %d", n, max)
 				}
 				res[i] = i
 			}
 		}
 
+		// Schedule and execute all pending work
 		wg.Add(N)
 		for i := 0; i < N; i++ {
 			sch.Schedule(makeJob(tc.workers, i, tc.results))
 		}
 		wg.Wait()
 
+		// Check work consistency
 		for i, p := 1, tc.results[0]; i < len(tc.results); i++ {
 			if tc.results[i]-p != 1 {
 				t.Errorf("Wrong number at index %d; wanted %d, got %d", i, p+1, tc.results[i])
@@ -50,6 +52,9 @@ func TestScheduler(t *testing.T) {
 			p = tc.results[i]
 		}
 		t.Logf("Scheduling and completion of %d jobs with %3d workers and %3d job queue took %v", N, tc.workers, tc.jobs, time.Since(t0))
+
+		// Shutdown
+		sch.Shutdown()
 	}
 }
 
@@ -65,16 +70,12 @@ func BenchmarkScheduler10over10(b *testing.B) {
 	benchmarkScheduler(b, New(10, 10))
 }
 
-func BenchmarkScheduler1over100(b *testing.B) {
-	benchmarkScheduler(b, New(1, 100))
-}
-
 func BenchmarkScheduler50over100(b *testing.B) {
 	benchmarkScheduler(b, New(50, 100))
 }
 
-func BenchmarkScheduler100over10(b *testing.B) {
-	benchmarkScheduler(b, New(100, 10))
+func BenchmarkScheduler100over50(b *testing.B) {
+	benchmarkScheduler(b, New(100, 50))
 }
 
 func BenchmarkScheduler100over100(b *testing.B) {
@@ -87,8 +88,9 @@ func benchmarkScheduler(b *testing.B, sch Scheduler) {
 		wg.Add(1)
 		sch.Schedule(func() {
 			defer wg.Done()
-			time.Sleep(10 * time.Microsecond)
+			time.Sleep(1 * time.Microsecond)
 		})
 	}
 	wg.Wait()
+	sch.Shutdown()
 }

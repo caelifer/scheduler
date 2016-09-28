@@ -1,6 +1,8 @@
 package scheduler
 
 import (
+	"runtime"
+
 	"github.com/caelifer/scheduler/job"
 	"github.com/caelifer/scheduler/worker"
 )
@@ -8,6 +10,7 @@ import (
 // Scheduler is an interface type to provide an abstraction around load-balancing operation scheduling.
 type Scheduler interface {
 	Schedule(job.Interface)
+	Shutdown()
 }
 
 // New builds a new Scheduler object. It starts its internal scheduling process
@@ -17,21 +20,29 @@ type Scheduler interface {
 // takes two paramters: nworkers - a number of background workers, and njobs -
 // a number of queued jobs, before scheduler would block.
 func New(nworkers, njobs int) Scheduler {
-	s := new(simpleScheduler) // Heap
-	s.workPool = make(chan worker.Interface, nworkers)
-	s.jobs = make(chan job.Interface, njobs)
+	s := new(simpleScheduler) // Heap allocation
+	s.wpool = make(chan worker.Interface, nworkers)
+	s.jpool = make(chan job.Interface, njobs)
+	s.quit = make(chan struct{})
 
 	// Populate our pool of workers
 	for i := 0; i < nworkers; i++ {
-		s.workPool <- worker.New(s.workPool)
+		s.wpool <- worker.New(s.wpool, s.quit)
 	}
 	// Start our scheduler on the background
 	go func() {
-		// Run until the main program finishes
+		// Run until quit signal is received
 		for {
-			// Run next job with next available worker. This will block when either
-			// there are no available workers or jobs queue is empty
-			(<-s.workPool).Run(<-s.jobs)
+			select {
+			case w := <-s.wpool:
+				// Run next job with next available worker. This will block when either
+				// there are no available workers or jobs queue is empty
+				if j, ok := <-s.jpool; ok {
+					w.Run(j)
+				}
+			case <-s.quit:
+				return
+			}
 		}
 	}()
 	return s
@@ -39,11 +50,20 @@ func New(nworkers, njobs int) Scheduler {
 
 // simpleScheduler is an value type that implements Scheduler interface.
 type simpleScheduler struct {
-	workPool chan worker.Interface // Buffered channel of workers
-	jobs     chan job.Interface    // Buffered channel of pending work units
+	wpool chan worker.Interface // Buffered channel of workers
+	jpool chan job.Interface    // Buffered channel of pending work units
+	quit  chan struct{}         // Quit channel for orderly shutdown
 }
 
 // Schedule is an implementation of Schedule interface for simpleSchedule value type.
 func (s *simpleScheduler) Schedule(j job.Interface) {
-	s.jobs <- j // Could block if jobs buffer is full
+	s.jpool <- j // Could block if jobs buffer is full
+	runtime.Gosched()
+}
+
+func (s *simpleScheduler) Shutdown() {
+	close(s.quit)
+	close(s.jpool)
+	close(s.wpool)
+	s = nil // release memory
 }
