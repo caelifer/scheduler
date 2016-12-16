@@ -15,14 +15,12 @@ type Scheduler interface {
 
 // New builds a new Scheduler object. It starts its internal scheduling process
 // in the background. This scheduling process makes sure that all available workers
-// are always running in the background waiting for the work unit to come in. The
-// work units are managed in a separate buffered channel of job.Interfaces. New
-// takes two paramters: nworkers - a number of background workers, and njobs -
-// a number of queued jobs, before scheduler would block.
-func New(nworkers, njobs int) Scheduler {
+// are always running in the background waiting for the work units to come in. New
+// takes a single paramter: nworkers - a number of background workers.
+func New(nworkers int) Scheduler {
 	s := new(simpleScheduler) // Heap allocation
 	s.wpool = make(chan worker.Interface, nworkers)
-	s.jpool = make(chan job.Interface, njobs)
+	s.jpool = make(chan job.Interface) // ubuffered channel to reduce scheduling latency
 	s.quit = make(chan struct{})
 
 	// Populate our pool of workers
@@ -57,7 +55,7 @@ type simpleScheduler struct {
 
 // Schedule is an implementation of Schedule interface for simpleSchedule value type.
 func (s *simpleScheduler) Schedule(j job.Interface) {
-	s.jpool <- j // Could block if jobs buffer is full
+	s.jpool <- j // Will block until there is an available worker to handle the job
 	runtime.Gosched()
 }
 

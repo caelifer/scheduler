@@ -22,7 +22,7 @@ type simpleWorker struct {
 func New(done chan<- Interface, quit <-chan struct{}) Interface {
 	w := new(simpleWorker) // Heap
 	w.done = done
-	w.jobs = make(chan job.Interface, 1)
+	w.jobs = make(chan job.Interface)
 
 	// Start worker's thread
 	go func() {
@@ -31,17 +31,6 @@ func New(done chan<- Interface, quit <-chan struct{}) Interface {
 			case j := <-w.jobs:
 				j() // Execute new job
 			case <-quit:
-				// Prevent anyone submitting new jobs to finished worker
-				close(w.jobs)
-
-				// Process a job that can be left on the buffered queue
-				select {
-				case j, ok := <-w.jobs:
-					if ok {
-						j()
-					}
-				default: // noop
-				}
 				return // shutdown
 			}
 		}
