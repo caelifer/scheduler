@@ -1,7 +1,7 @@
 scheduler
 =========
 
-`scheduler` is a simple load-balancer across n-workers. It maintains a buffered channel of work-uinits represented by func() values
+`scheduler` is a simple load-balancer across n-workers. Work-units are values of type jobs.Interface that is a type alias for func(). 
 
 # Installation
 ```
@@ -23,13 +23,12 @@ import (
 
 const (
 	NWORKERS = 10
-	NJOBS    = 5
 	NSAMPS   = 100
 )
 
 func main() {
 	var wg sync.WaitGroup
-	sch := scheduler.New(NWORKERS, NJOBS)
+	sch := scheduler.New(NWORKERS)
 	t0 := time.Now()
 	rand.Seed(t0.UnixNano())
 	for i := 0; i < NSAMPS; i++ {
