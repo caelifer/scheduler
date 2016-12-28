@@ -8,15 +8,15 @@ import (
 
 func TestScheduler(t *testing.T) {
 	var tests = []struct {
-		workers, jobs int
-		results       []int
+		workers int
+		results []int
 	}{
-		{1, 1, make([]int, 100000)},
-		{10, 1, make([]int, 100000)},
-		{10, 10, make([]int, 100000)},
-		{100, 10, make([]int, 100000)},
-		{100, 100, make([]int, 100000)},
-		{100, 500, make([]int, 100000)},
+		{1, make([]int, 100000)},
+		{10, make([]int, 100000)},
+		{10, make([]int, 100000)},
+		{100, make([]int, 100000)},
+		{100, make([]int, 100000)},
+		{100, make([]int, 100000)},
 	}
 
 	for _, tc := range tests {
@@ -24,7 +24,7 @@ func TestScheduler(t *testing.T) {
 		N := len(tc.results)
 
 		t0 := time.Now()
-		sch := New(tc.workers, tc.jobs)
+		sch := New(tc.workers)
 		makeJob := func(max, i int, res []int) func() {
 			return func() {
 				defer wg.Done()
@@ -51,35 +51,27 @@ func TestScheduler(t *testing.T) {
 			}
 			p = tc.results[i]
 		}
-		t.Logf("Scheduling and completion of %d jobs with %3d workers and %3d job queue took %v", N, tc.workers, tc.jobs, time.Since(t0))
+		t.Logf("Scheduling and completion of %d jobs with %3d workers took %v", N, tc.workers, time.Since(t0))
 
 		// Shutdown
 		sch.Shutdown()
 	}
 }
 
-func BenchmarkScheduler1over10(b *testing.B) {
-	benchmarkScheduler(b, New(1, 10))
+func BenchmarkScheduler1Worker(b *testing.B) {
+	benchmarkScheduler(b, New(1))
 }
 
-func BenchmarkScheduler5over10(b *testing.B) {
-	benchmarkScheduler(b, New(5, 10))
+func BenchmarkScheduler10Workers(b *testing.B) {
+	benchmarkScheduler(b, New(10))
 }
 
-func BenchmarkScheduler10over10(b *testing.B) {
-	benchmarkScheduler(b, New(10, 10))
+func BenchmarkScheduler50Workers(b *testing.B) {
+	benchmarkScheduler(b, New(50))
 }
 
-func BenchmarkScheduler50over100(b *testing.B) {
-	benchmarkScheduler(b, New(50, 100))
-}
-
-func BenchmarkScheduler100over50(b *testing.B) {
-	benchmarkScheduler(b, New(100, 50))
-}
-
-func BenchmarkScheduler100over100(b *testing.B) {
-	benchmarkScheduler(b, New(100, 100))
+func BenchmarkScheduler100Workers(b *testing.B) {
+	benchmarkScheduler(b, New(100))
 }
 
 func benchmarkScheduler(b *testing.B, sch Scheduler) {
@@ -88,7 +80,7 @@ func benchmarkScheduler(b *testing.B, sch Scheduler) {
 		wg.Add(1)
 		sch.Schedule(func() {
 			defer wg.Done()
-			time.Sleep(1 * time.Microsecond)
+			// NOOP
 		})
 	}
 	wg.Wait()
