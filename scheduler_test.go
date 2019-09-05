@@ -12,11 +12,12 @@ func TestScheduler(t *testing.T) {
 		results []int
 	}{
 		{1, make([]int, 100000)},
-		{10, make([]int, 100000)},
-		{10, make([]int, 100000)},
-		{100, make([]int, 100000)},
-		{100, make([]int, 100000)},
-		{100, make([]int, 100000)},
+		{2, make([]int, 100000)},
+		{4, make([]int, 100000)},
+		{8, make([]int, 100000)},
+		{16, make([]int, 100000)},
+		{32, make([]int, 100000)},
+		{64, make([]int, 100000)},
 	}
 
 	for _, tc := range tests {
