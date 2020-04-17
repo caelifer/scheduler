@@ -19,7 +19,7 @@ type simpleWorker struct {
 
 // New constructs new Worker. It takes one parameter - a done channel to
 // signal to Scheduler that this worker is done with its work.
-func New(done chan<- Interface, quit <-chan struct{}) Interface {
+func New(done chan<- Interface, quit <-chan struct{}) *simpleWorker {
 	w := new(simpleWorker) // Heap
 	w.done = done
 	w.jobs = make(chan job.Interface)
@@ -31,6 +31,8 @@ func New(done chan<- Interface, quit <-chan struct{}) Interface {
 			case j := <-w.jobs:
 				j() // Execute new job
 			case <-quit:
+				close(w.jobs)
+				close(w.done)
 				return // shutdown
 			}
 		}
@@ -54,3 +56,5 @@ func (w *simpleWorker) Run(j job.Interface) {
 		j()
 	}
 }
+
+// vim: :ts=4:sw=4:ai
