@@ -11,13 +11,15 @@ func TestScheduler(t *testing.T) {
 		workers int
 		results []int
 	}{
-		{1, make([]int, 100000)},
-		{2, make([]int, 100000)},
-		{4, make([]int, 100000)},
-		{8, make([]int, 100000)},
-		{16, make([]int, 100000)},
-		{32, make([]int, 100000)},
-		{64, make([]int, 100000)},
+		{1 << 0, make([]int, 100000)},
+		{1 << 1, make([]int, 100000)},
+		{1 << 3, make([]int, 100000)},
+		{1 << 4, make([]int, 100000)},
+		{1 << 5, make([]int, 100000)},
+		{1 << 6, make([]int, 100000)},
+		{1 << 7, make([]int, 100000)},
+		{1 << 8, make([]int, 100000)},
+		{1 << 9, make([]int, 100000)},
 	}
 
 	for _, tc := range tests {
@@ -52,7 +54,7 @@ func TestScheduler(t *testing.T) {
 			}
 			p = tc.results[i]
 		}
-		t.Logf("Scheduling and completion of %d jobs with %3d workers took %v", N, tc.workers, time.Since(t0))
+		t.Logf("Scheduling %d jobs to completion with %3d workers took %v", N, tc.workers, time.Since(t0))
 
 		// Shutdown
 		sch.Shutdown()
@@ -77,8 +79,8 @@ func BenchmarkScheduler100Workers(b *testing.B) {
 
 func benchmarkScheduler(b *testing.B, sch Scheduler) {
 	var wg sync.WaitGroup
+	wg.Add(b.N)
 	for i := 0; i < b.N; i++ {
-		wg.Add(1)
 		sch.Schedule(func() {
 			defer wg.Done()
 			// NOOP
@@ -87,3 +89,5 @@ func benchmarkScheduler(b *testing.B, sch Scheduler) {
 	wg.Wait()
 	sch.Shutdown()
 }
+
+// vim: :ts=4:sw=4:autoindent:noexpandtab
